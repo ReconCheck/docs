@@ -16,7 +16,7 @@
 | Built-in auto rule | ✅ | compares every shared numeric column, tolerance relative 0.001 / absolute 0.01; **never double-reports a column an explicit rule already covers** (column-level dedupe) |
 | YAML differential rules | ✅ | `match_on` / `compare` (single or list) / `severity` (high·medium·low) / `tolerance` (relative + absolute) / `exceptions` / `evidence.require: both_sides` |
 | Exceptions | ✅ | unit conversion `kg↔g`, rounding, **date tolerance `dates_within: {days}`** (a real date gap is still reported), **case-insensitive text equality** (a real text difference is still reported) |
-| **Three-way compare3** | ✅ | PO + delivery note + invoice: every pairwise report, plus a consensus/outlier pass per key and field (numeric values compared with the active tolerance and unit-alignable, keys normalisable) |
+| **Three-way compare3** | ✅ | chain-agnostic — purchase chain (PO + delivery note + invoice) and **sales chain (sales order + outbound + sales invoice)** alike: every pairwise report, plus a consensus/outlier pass per key and field (numeric values compared with the active tolerance and unit-alignable, keys normalisable) |
 | Evidence chain | ✅ | every finding carries both-side coordinates + a `cell://` href (PDF findings cite the page); the report JSON is the contract |
 | CLI | ✅ | `reconcheck compare` / `compare3 ...`; missing files and bad input fail cleanly (no traceback) |
 
@@ -45,7 +45,7 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 
 ### Batch semantics
 
-- Document-kind tokens (`po`/`order`/`采购`, `inv`/`发票`, …) are stripped from filenames; files sharing the remaining business key pair up (e.g. `PO-240913-001` ↔ `INV-240913-001`); singletons land in `unpaired`.
+- Document-kind tokens are stripped from filenames (purchase: `po`/`order`/`采购`, `dn`/`送货`, `inv`/`发票`; sales: `so`/`sales`/`销售`, `out`/`outbound`/`出库`, `siv`/`销项`); files sharing the remaining business key pair up (e.g. purchase `PO-240913-001` ↔ `INV-240913-001`, sales `SO-240913-001` ↔ `SIV-240913-001`); singletons land in `unpaired`.
 - Duplicate references (same `doc_id`, or byte-identical uploads) are deduped — no pointless self-comparisons.
 - One bad pair fails on its own; the rest of the batch still finishes.
 

@@ -16,7 +16,7 @@
 | 内置自动规则 | ✅ | 任意两侧共有数值列参与比对，容差 相对 0.001 / 绝对 0.01；**不对显式规则已覆盖的列重复报**（列级去重） |
 | YAML 差分规则 | ✅ | `match_on` / `compare` / `severity` / `tolerance`(相对+绝对) / `exceptions` / `evidence.require: both_sides` |
 | 例外（exceptions） | ✅ | 单位换算 `kg↔g`、四舍五入、**日期容差 `dates_within`**（超差仍报差异）、**忽略大小写文本相等**（真不一致仍报差异） |
-| **三单核对 compare3** | ✅ | 采购订单+送货单+发票：逐对两两报告 + 按键/字段的 consensus/outlier 判定（数值按容差与单位对齐，键支持归一化） |
+| **三单核对 compare3** | ✅ | 采购链路（PO/送货/发票）与**销售链路（SO/出库/销项发票）**通用：逐对两两报告 + 按键/字段的 consensus/outlier 判定（数值按容差与单位对齐，键支持归一化） |
 | 证据链 | ✅ | 每条 finding 双侧坐标 + `cell://` href（PDF 证据带页码）；报告 JSON 为稳定契约 |
 | CLI | ✅ | `reconcheck compare` / `compare3`，缺文件/非法输入干净报错（非 traceback） |
 
@@ -47,7 +47,7 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 
 ### 批处理语义
 
-- 文件名中的单据种类词（`po`/`order`/`采购`、`inv`/`发票` …）被剥离，剩余业务编号相同的一组自动成对（如 `PO-240913-001` ↔ `INV-240913-001`）；独立出现的文件进 unpaired 列表。
+- 文件名中的单据种类词（采购：`po`/`order`/`采购`、`dn`/`送货`、`inv`/`发票`；销售：`so`/`sales`/`销售`、`out`/`outbound`/`出库`、`siv`/`销项`）被剥离，剩余业务编号相同的一组自动成对（如采购 `PO-240913-001` ↔ `INV-240913-001`，销售 `SO-240913-001` ↔ `SIV-240913-001`）；独立出现的文件进 unpaired 列表。
 - 同 `doc_id` 重复引用、同内容重复上传会被去重（不产生无意义自比对）。
 - 单组配对失败不影响同批其他对。
 

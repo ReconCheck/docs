@@ -26,10 +26,11 @@ reconcheck-api        # then open http://127.0.0.1:8765
 - Grouped pairs are listed; files that appear once land in **unpaired**
   (usually: no shared number in the filename).
 
-**Three-way verification** — for PO + delivery note + invoice together, use
-`reconcheck compare3` or `POST /api/compare3` (3 files or 3 `doc_ids`): you get
-every pairwise report plus a consensus pass that names the **outlier side**
-(e.g. "invoice disagrees with PO + delivery note").
+**Three-way verification** — for the purchase chain (PO + delivery note +
+invoice) or the **sales chain (sales order + outbound + sales invoice)**,
+use `reconcheck compare3` or `POST /api/compare3` (3 files or 3 `doc_ids`):
+you get every pairwise report plus a consensus pass that names the **outlier
+side** (e.g. "invoice disagrees with PO + delivery note").
 
 ### Run and read results
 
@@ -114,8 +115,11 @@ Rule format and exception semantics: core `DESIGN.md` and the docs
 ## 4. FAQ
 
 **Q: "No comparable pairs"?** The business numbers after stripping kind words
-differ, or a group needs ≥2 files. `PO-240913-001` ↔ `INV-240913-001` pairs;
-`a.csv` ↔ `b.csv` does not.
+differ, or a group needs ≥2 files. Naming that works: purchase
+`PO-240913-001` ↔ `INV-240913-001`, sales `SO-240913-001` ↔ `SIV-240913-001`
+(kind tokens stripped: `po`/`order`/`采购`, `so`/`sales`/`销售`,
+`out`/`outbound`/`出库`, `dn`/`送货`, `inv`/`发票`, `siv`/`销项`, …);
+`a.csv` ↔ `b.csv` does not pair.
 
 **Q: Zero findings — suspicious?** Possibly truly no differences; or the
 numeric columns differ in name / are not numeric. The auto rule only compares
