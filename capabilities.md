@@ -10,12 +10,15 @@
 |---|---|---|
 | 表格解析 CSV / TSV / TXT | ✅ | 自动嗅探分隔符（`,` `;` `\t` `\|`），宽行自动补列名 |
 | 表格解析 XLSX / XLSM | ✅ | 只读流式加载（内存恒定），多工作表可选，`data_only` 取值 |
+| PDF 解析（文本层） | ✅ | 线框表格优先 + 无框版面兜底（按坐标聚类行列）；**扫描件（无文本层）报「需 OCR」明确错误**，不产出垃圾表 |
 | 编码识别 | ✅ | UTF-8（含 BOM）/ GB18030 / UTF-16 / Latin-1；**乱码置信度门槛**：二进制垃圾抛明确错误而非产出垃圾表 |
 | 行对齐 | ✅ | 按 `match_on` 键列精确匹配，键归一化（料号 `A-012` → `a12`、实体后缀剥离、空白），单位保留在单元格 |
 | 内置自动规则 | ✅ | 任意两侧共有数值列参与比对，容差 相对 0.001 / 绝对 0.01；**不对显式规则已覆盖的列重复报**（列级去重） |
-| YAML 差分规则 | ✅ | `match_on` / `compare` / `severity` / `tolerance`(相对+绝对) / `exceptions`（单位换算 `kg↔g`、四舍五入）/ `evidence.require: both_sides` |
-| 证据链 | ✅ | 每条 finding 双侧坐标 + `cell://` href；报告 JSON 为稳定契约 |
-| CLI | ✅ | `reconcheck compare LEFT RIGHT [--rules --match-on --normalize --sheet --output]`，缺文件/非法输入干净报错（非 traceback） |
+| YAML 差分规则 | ✅ | `match_on` / `compare` / `severity` / `tolerance`(相对+绝对) / `exceptions` / `evidence.require: both_sides` |
+| 例外（exceptions） | ✅ | 单位换算 `kg↔g`、四舍五入、**日期容差 `dates_within`**（超差仍报差异）、**忽略大小写文本相等**（真不一致仍报差异） |
+| **三单核对 compare3** | ✅ | 采购订单+送货单+发票：逐对两两报告 + 按键/字段的 consensus/outlier 判定（数值按容差与单位对齐，键支持归一化） |
+| 证据链 | ✅ | 每条 finding 双侧坐标 + `cell://` href（PDF 证据带页码）；报告 JSON 为稳定契约 |
+| CLI | ✅ | `reconcheck compare` / `compare3`，缺文件/非法输入干净报错（非 traceback） |
 
 使用示例：
 
@@ -29,7 +32,8 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 | 端点 | 状态 | 用途 |
 |---|---|---|
 | `GET /api/health` | ✅ | 存活 + 引擎版本 |
-| `POST /api/compare` | ✅ | 同步对比（2 个文件或 2 个 `doc_ids`），直接返回报告 |
+| `POST /api/compare` | ✅ | 同步对比（2 文件或 2 `doc_ids`），直接返回报告 |
+| `POST /api/compare3` | ✅ | 同步三方核对：3 文件或 3 `doc_ids`，返回逐对报告 + consensus/outlier 判定 |
 | `POST /api/jobs` | ✅ | **异步批处理**：批量上传文件 + 文档库引用，按文件名业务键自动配对，后台 worker 逐对执行 |
 | `GET /api/jobs/{id}` | ✅ | 状态 / 进度 / 逐对结果；**败对可见**（不拖垮整批，带失败原因） |
 | `GET /api/reports/{id}` | ✅ | 已归档报告 JSON |
@@ -88,8 +92,7 @@ ReconCheck 定位为**只读**：不写业务系统、不改源文件；对上�
 |---|---|---|
 | 跨引擎「作业层」定位 | 🧭 | 见 [job-layer.md](./job-layer.md)：把批处理/配对/报告抽象为引擎无关的作业层，未来可接其他验证引擎 |
 | LLM 参与 | 🧭 | opt-in `LLMEnhancer`（接口已预留在 `reconcheck/llm`）：对齐消歧 + 差异解释；仅 OpenAI 兼容端点、超时/预算/失败回退到确定性结果、`llm_augmented` 标记 |
-| PDF / 扫描件 OCR | 🕔 | 版面还原、无边框表格、多栏 PDF（最大里程碑） |
-| 实体解析 | 🕔 | `华加` ↔ `深圳市华加生物科技有限公司` 的真对齐（当前为后缀/空白归一） |
-| 三单匹配 | 🕔 | 采购订单 / 送货单 / 发票 三方核对 |
-| 规则 v1 稳定 | 🕔 | 例外目录扩充、evidence 输出格式冻结 |
+| 扫描件 OCR | 🕔 | PDF 文本层已实现；无文本层的扫描件走预留的 OCR 后端（下一里程碑：版面还原、无边框表格、多栏） |
+| 实体解析 | 🕔 | `华加` ↔ `深圳市华加生物科技有限公司` 的真对齐（当前为后缀/空白归一，三单键支持 part_no/entity 归一） |
+| 规则 v1 稳定 | 🕔 | 例外目录扩充（日期/文本已入库）、evidence 输出格式冻结 |
 | 分布式队列 | 🕔 | 当前单进程 worker + 文件持久化，无消息队列 |

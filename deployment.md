@@ -9,8 +9,8 @@
 git clone https://github.com/ReconCheck/core.git reconcheck
 cd reconcheck
 python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev,web]"   # Windows
-.venv/bin/python -m pip install -e ".[dev,web]"       # Linux/macOS
+.venv/Scripts/python -m pip install -e ".[dev,web,pdf]"   # Windows（pdf 为 PDF 文本层解析，可选）
+.venv/bin/python -m pip install -e ".[dev,web,pdf]"       # Linux/macOS
 
 # 冒烟
 .venv/bin/reconcheck --version

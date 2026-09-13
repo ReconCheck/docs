@@ -10,12 +10,15 @@
 |---|---|---|
 | Tabular parsing CSV / TSV / TXT | ✅ | delimiter sniffing (`,` `;` `\t` `\|`); ragged rows get generated headers |
 | Tabular parsing XLSX / XLSM | ✅ | read-only streaming load (flat memory), multi-sheet, `data_only` values, optional sheet filter |
+| PDF parsing (text layer) | ✅ | ruling-line tables first, layout fallback for borderless print-outs (word clustering by coordinates); **scan-only files raise a clear "OCR not wired" error** instead of parsing garbage |
 | Encoding detection | ✅ | UTF-8 (with/without BOM) / GB18030 / UTF-16 / Latin-1; **plausibility gate**: binary junk raises a clear `TextDecodeError` instead of parsing as a garbage table |
 | Row alignment | ✅ | exact key match on `match_on` with key normalisation (part numbers `A-012` → `a12`, entity suffix stripping, whitespace); cell-level units preserved |
 | Built-in auto rule | ✅ | compares every shared numeric column, tolerance relative 0.001 / absolute 0.01; **never double-reports a column an explicit rule already covers** (column-level dedupe) |
-| YAML differential rules | ✅ | `match_on` / `compare` (single or list) / `severity` (high·medium·low) / `tolerance` (relative + absolute) / `exceptions` (unit conversion `kg↔g`, rounding) / `evidence.require: both_sides` |
-| Evidence chain | ✅ | every finding carries both-side coordinates + a `cell://` href; the report JSON is the contract |
-| CLI | ✅ | `reconcheck compare LEFT RIGHT [--rules --match-on --normalize --sheet --output]`; missing files and bad input fail cleanly (no traceback) |
+| YAML differential rules | ✅ | `match_on` / `compare` (single or list) / `severity` (high·medium·low) / `tolerance` (relative + absolute) / `exceptions` / `evidence.require: both_sides` |
+| Exceptions | ✅ | unit conversion `kg↔g`, rounding, **date tolerance `dates_within: {days}`** (a real date gap is still reported), **case-insensitive text equality** (a real text difference is still reported) |
+| **Three-way compare3** | ✅ | PO + delivery note + invoice: every pairwise report, plus a consensus/outlier pass per key and field (numeric values compared with the active tolerance and unit-alignable, keys normalisable) |
+| Evidence chain | ✅ | every finding carries both-side coordinates + a `cell://` href (PDF findings cite the page); the report JSON is the contract |
+| CLI | ✅ | `reconcheck compare` / `compare3 ...`; missing files and bad input fail cleanly (no traceback) |
 
 ```bash
 reconcheck compare examples/po.csv examples/invoice.csv \
@@ -28,6 +31,7 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 |---|---|---|
 | `GET /api/health` | ✅ | liveness + engine version |
 | `POST /api/compare` | ✅ | synchronous compare (2 files or 2 `doc_ids`), returns the report |
+| `POST /api/compare3` | ✅ | synchronous three-way verification (3 files or 3 `doc_ids`): pairwise reports + consensus/outlier section |
 | `POST /api/jobs` | ✅ | **async batch**: upload files + reference library docs; auto-pairs by business key; background worker runs every pair |
 | `GET /api/jobs/{id}` | ✅ | status / progress / per-pair summary; **failed pairs stay visible** with the reason, without breaking the batch |
 | `GET /api/reports/{id}` | ✅ | archived report JSON |
@@ -86,8 +90,7 @@ ReconCheck is **read-only**: it never writes to business systems and never modif
 |---|---|---|
 | Cross-engine "job layer" | 🧭 | see [job-layer.md](./job-layer.md): Document / Pair / Report as engine-agnostic abstractions; future engine adapters; LLM stays an engine-layer pipe |
 | LLM participation | 🧭 | opt-in `LLMEnhancer` (interface reserved in `reconcheck/llm`): alignment disambiguation + finding explanations; OpenAI-compatible endpoints only, timeouts/budget/rollback to the deterministic result, `llm_augmented` flags |
-| PDF / scanned documents | 🕔 | layout reconstruction, borderless tables, multi-column PDFs (largest milestone) |
-| Entity resolution | 🕔 | real linking (`华加` ↔ `深圳市华加生物科技有限公司`; today: suffix/whitespace normalisation) |
-| Three-way match | 🕔 | purchase order / delivery note / invoice |
-| Rule format v1 | 🕔 | richer exception catalogue, frozen evidence output |
+| OCR for scanned documents | 🕔 | PDF text layer shipped; scans (no text layer) use the reserved OCR backend (next milestone: layout reconstruction, borderless tables, multi-column) |
+| Entity resolution | 🕔 | real linking (`华加` ↔ `深圳市华加生物科技有限公司`; today: suffix/whitespace normalisation, and `part_no`/`entity` key normalisation for align & compare3) |
+| Rule format v1 | 🕔 | richer exception catalogue (date/text shipped), frozen evidence output |
 | Distributed queue | 🕔 | today: single-process worker + file persistence, no message queue |
