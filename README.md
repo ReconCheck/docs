@@ -11,15 +11,14 @@
 | [用户使用指南 user-guide.md](./user-guide.md) | **用户怎么用**：操作员网页流程、企业系统 REST API 对接、开发者 CLI、FAQ |
 | [功能能力清单 capabilities.md](./capabilities.md) | **具体能实现哪些功能**（中文）：按引擎层 / Web API / 前端 / 健壮性安全分层的功能表，含使用入口与规划 |
 | [Capabilities (English)](./capabilities.en.md) | English version of the capability list — what this build can do, by layer |
+| [规则编写指南 writing-rules.md](./writing-rules.md) | 差分规则怎么写、怎么调、怎么排查：字段逐项说明、exceptions、自动规则、调试清单 |
+| [部署与内网防护 deployment.md](./deployment.md) | 服务器安装、必配项（API 密钥/TTL）、数据目录备份、systemd/nssm 服务化、反向代理、资源评估、安全清单 |
+| [ERP 接入示例 integration.md](./integration.md) | records/file 两型的完整配置与调用、鉴权三种、错误码语义、最佳实践与边界 |
 | [作业层定位 job-layer.md](./job-layer.md) | 跨验证引擎的「作业层」设计：Document / Pair / Report 抽象、引擎可替换、只读约束 |
 | [核心设计 DESIGN.md](https://github.com/ReconCheck/core/blob/main/DESIGN.md) | 引擎四阶段流水线、数据模型、规则格式、Web 层、LLM 参与设计 |
 | [快速开始 README.md](https://github.com/ReconCheck/core/blob/main/README.md) | 安装、CLI、Web UI、API 端点表、运维参数 |
 
-## 内容规划（待补充）
-
-- **Writing rules** — 差分规则编写指南与实例（引擎侧格式见 core DESIGN.md，规则规范见私有 [rules](https://github.com/ReconCheck/rules) 仓库）
-- **Deployment** — 内网部署、`RECONCHECK_API_KEY` 防护、资源评估
-- **Integration** — 接入 ERP / 数据源的完整示例（含 records JSON 的 `records_path`/`id_field` 最佳实践）
+> 文档状态：上述内容均已覆盖；随 core 仓库开发持续更新。
 
 ## 协作
 
