@@ -8,6 +8,7 @@
 
 | 文档 | 内容 |
 |---|---|
+| [用户使用指南 user-guide.md](./user-guide.md) | **用户怎么用**：操作员网页流程、企业系统 REST API 对接、开发者 CLI、FAQ |
 | [功能能力清单 capabilities.md](./capabilities.md) | **具体能实现哪些功能**：按引擎层 / Web API / 前端 / 健壮性安全分层的功能表，含使用入口与规划 |
 | [作业层定位 job-layer.md](./job-layer.md) | 跨验证引擎的「作业层」设计：Document / Pair / Report 抽象、引擎可替换、只读约束 |
 | [核心设计 DESIGN.md](https://github.com/ReconCheck/core/blob/main/DESIGN.md) | 引擎四阶段流水线、数据模型、规则格式、Web 层、LLM 参与设计 |
