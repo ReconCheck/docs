@@ -27,6 +27,7 @@ python -m venv .venv
 | `RECONCHECK_DATA` | a dedicated data directory (default `./data`); the whole thing is one backup unit |
 | Listen address | keep it off the public internet; use a reverse proxy (see §5) if exposure is needed |
 | `RECONCHECK_TTL_DAYS` | default 30; adjust to your retention policy (uploaded files + reports are pruned hourly; active jobs never touched) |
+| `RECONCHECK_ALLOW_PRIVATE_FETCH` | unset by default → data-source fetch rejects loopback / private / link-local / cloud-metadata (169.254.x.x) addresses and re-checks after redirects; set `=1` only when the source genuinely lives on a **trusted intranet** (the http/https scheme whitelist always applies) |
 
 ## 3. Data directory layout (backup / restore)
 
@@ -103,7 +104,7 @@ before the engine ever sees the file.
 | Memory | XLSX loads streamed (flat memory); typical reconciliation tables (≤10k rows) need a few hundred MB. Uploads are capped at 64 MB |
 | Disk | `files/` and `reports/` are TTL-pruned (default 30 days); `documents/` and `datasources/` are not — archive them separately if needed |
 | CPU / concurrency | single process, single worker thread, serial queue; horizontal scale = more instances, each with its own data directory |
-| Network | data-source fetch is a server-side request (20s timeout, 50 MB streaming cap, follows redirects); the operator configures endpoints deliberately (v0 has no SSRF guard) |
+| Network | data-source fetch is a server-side request (20s timeout, 50 MB streaming cap, redirects re-checked); SSRF guard on by default: http/https only, loopback/private/link-local/metadata resolutions refused; trusted intranets opt out with `RECONCHECK_ALLOW_PRIVATE_FETCH=1` |
 
 ## 7. Upgrades & daily operations
 
@@ -118,6 +119,6 @@ before the engine ever sees the file.
 - [ ] `RECONCHECK_API_KEY` set to a strong random value
 - [ ] Not listening on the public internet (localhost + proxy, or a trusted VLAN)
 - [ ] Data directory location and backup plan defined; backups treated as secrets (plaintext tokens)
-- [ ] No data-source config points at sensitive internal paths (SSRF surface)
+- [ ] Intranet data-source endpoints: `RECONCHECK_ALLOW_PRIVATE_FETCH=1` set deliberately and the endpoints themselves trusted (the env var turns off the private-address guard)
 - [ ] Proxy `client_max_body_size` ≥ 70m (or matched to the cap)
 - [ ] LLM participation disabled by default (`NullEnhancer`) — no external calls unless opted in

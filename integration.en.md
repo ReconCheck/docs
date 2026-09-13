@@ -113,9 +113,11 @@ fetch substitutes `{id}`. Without `{id}`, fetch pulls `url` as-is.
   list (or you paginate yourself before exposing it).
 - **Payload size**: don't return tens of MB per records call; fetch cuts off
   at 50 MB while streaming (→ 502).
-- **SSRF surface**: fetch is a server-side request to an operator-configured
-  endpoint; keep endpoints minimal-trust, never point one at sensitive
-  internal addresses.
+- **SSRF surface**: fetch is a server-side request; the guard is **on by
+  default** — http/https only, and after DNS resolution loopback/private/
+  link-local/cloud-metadata (169.254.x.x) addresses are refused, with a
+  re-check after redirects. Set `RECONCHECK_ALLOW_PRIVATE_FETCH=1` only when
+  the source lives on a trusted intranet (deployment §2).
 - **Read-only**: the engine never writes to business systems; its only writes
   are local (fetched copies, tokens, jobs/reports).
 - **Failure isolation**: one failing pair never breaks the batch; reasons

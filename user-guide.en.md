@@ -96,6 +96,10 @@ With `RECONCHECK_API_KEY` set, every `/api/*` call needs an `X-API-Key`
 header; **without it the API is unauthenticated** (startup warning — do not
 expose to untrusted networks).
 
+**Entering the key in the web UI:** press `Ctrl+K` for a key prompt (stored
+in browser localStorage, attached to every `/api` call automatically; cancel
+or leave blank to clear). On a 401 the page prompts again.
+
 ## 3. Developers: CLI / embedding
 
 ```bash
