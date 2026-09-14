@@ -48,6 +48,7 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 
 - Document-kind tokens are stripped from filenames (purchase: `po`/`order`/`采购`, `dn`/`送货`, `inv`/`发票`; sales: `so`/`sales`/`销售`, `out`/`outbound`/`出库`, `siv`/`销项`); files sharing the remaining business key pair up (e.g. purchase `PO-240913-001` ↔ `INV-240913-001`, sales `SO-240913-001` ↔ `SIV-240913-001`); singletons land in `unpaired`.
 - Duplicate references (same `doc_id`, or byte-identical uploads) are deduped — no pointless self-comparisons.
+- Groups of **3+ documents** also get an automatic **three-way consensus report** (consensus/outlier) next to the pairwise runs; the frontend aggregates each group into a single card (every document appears once) with the pairwise detail nested inside.
 - One bad pair fails on its own; the rest of the batch still finishes.
 
 ### Data sources

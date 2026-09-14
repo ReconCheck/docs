@@ -35,7 +35,11 @@ side** (e.g. "invoice disagrees with PO + delivery note").
 
 ### Run and read results
 
-- Top summary: **high / medium / low** finding counts.
+- Top summary: **high / medium / low** finding counts plus the number of document
+  groups. Files sharing a business number collapse into **one group card** (each
+  document appears exactly once — no repeated left/right rows): expanding it
+  shows the **three-way consensus table** first (auto-generated for groups of
+  3+, outlier values highlighted in red), then the pairwise detail.
 - Each finding: field, both values, row/column, severity.
 - Click a finding's **evidence link** → the page jumps to the original table
   and **highlights the exact cell**. Every claim is checkable against the
