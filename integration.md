@@ -82,6 +82,7 @@ curl -X POST .../api/jobs -F "files=@附件.csv"                              # 
 | `header` | `<header_name>: <token>` | 内部网关常见（如上 `X-ERP-TOKEN`） |
 
 - `PUT /api/datasources/{id}` 更新时留空 `token` = 保留原密钥不清空；`GET` 永远只回 `has_token`，不泄露明文。
+- 令牌落盘默认明文；设 `RECONCHECK_DATA_KEY`（安装 `crypto` 扩展）后以 Fernet 密文写入 `datasources/*.json`，读取时自动解密。
 - 探测（`/probe`）会真实请求端点：连接失败/超时 → `ok=false`；**非 2xx 也判失败**（如 401 说明 token 不对，不要误以为通了）。
 
 ## 5. 错误码语义（对接时对照）

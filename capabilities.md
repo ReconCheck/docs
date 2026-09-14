@@ -10,7 +10,7 @@
 |---|---|---|
 | 表格解析 CSV / TSV / TXT | ✅ | 自动嗅探分隔符（`,` `;` `\t` `\|`），宽行自动补列名 |
 | 表格解析 XLSX / XLSM | ✅ | 只读流式加载（内存恒定），多工作表可选，`data_only` 取值 |
-| PDF 解析（文本层） | ✅ | 线框表格优先 + 无框版面兜底（按坐标聚类行列）；**扫描件（无文本层）报「需 OCR」明确错误**，不产出垃圾表 |
+| PDF 解析（文本层） | ✅ | 线框表格优先 + 无框版面兜底（按坐标聚类行列）；**扫描件（无文本层）默认报「需 OCR」明确错误**（不产出垃圾表）；装 `pdf-ocr` 扩展并设 `RECONCHECK_OCR=1` 后按行 OCR（Tesseract） |
 | 编码识别 | ✅ | UTF-8（含 BOM）/ GB18030 / UTF-16 / Latin-1；**乱码置信度门槛**：二进制垃圾抛明确错误而非产出垃圾表 |
 | 行对齐 | ✅ | 按 `match_on` 键列精确匹配，键归一化（料号 `A-012` → `a12`、实体后缀剥离、空白），单位保留在单元格 |
 | 内置自动规则 | ✅ | 任意两侧共有数值列参与比对，容差 相对 0.001 / 绝对 0.01；**不对显式规则已覆盖的列重复报**（列级去重） |
@@ -18,6 +18,7 @@
 | 例外（exceptions） | ✅ | 单位换算 `kg↔g`、四舍五入、**日期容差 `dates_within`**（超差仍报差异）、**忽略大小写文本相等**（真不一致仍报差异） |
 | **三单核对 compare3** | ✅ | 采购链路（PO/送货/发票）与**销售链路（SO/出库/销项发票）**通用：逐对两两报告 + 按键/字段的 consensus/outlier 判定（数值按容差与单位对齐，键支持归一化） |
 | 证据链 | ✅ | 每条 finding 双侧坐标 + `cell://` href（PDF 证据带页码）；报告 JSON 为稳定契约 |
+| 报告告警 | ✅ | `warnings[]` 显式声明非致命问题（如**重复键 first-wins**：只有每键首行参与比对）；`documents[].kind` 标注单据种类（po/so/outbound/invoice/delivery） |
 | CLI | ✅ | `reconcheck compare` / `compare3`，缺文件/非法输入干净报错（非 traceback） |
 
 使用示例：
@@ -55,7 +56,7 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 
 - **type=file**：端点返回文档字节流，URL 支持 `{id}` 占位；`list_url` 可选提供可选清单。
 - **type=records**：端点返回 JSON，`records_path` 选择数组（如 `data.items`），自动转成表格（键并集为表头、一条记录一行）。
-- 鉴权：`none` / `bearer` / 自定义 `header`（`header_name`）；令牌明文存于本地数据目录、API 只回显 `has_token`。
+- 鉴权：`none` / `bearer` / 自定义 `header`（`header_name`）；令牌 API 只回显 `has_token`。落盘默认明文；配置 `RECONCHECK_DATA_KEY`（`crypto` 扩展）后 Fernet 加密存储。
 - 拉取在上游是**服务器侧请求**（无浏览器 CORS 问题），响应**流式 50MB 上限**，超限即中断报错。
 
 ## 三、前端（无依赖静态页，`/` 挂载）
@@ -91,8 +92,8 @@ ReconCheck 定位为**只读**：不写业务系统、不改源文件；对上�
 | 项目 | 状态 | 内容 |
 |---|---|---|
 | 跨引擎「作业层」定位 | 🧭 | 见 [job-layer.md](./job-layer.md)：把批处理/配对/报告抽象为引擎无关的作业层，未来可接其他验证引擎 |
-| LLM 参与 | 🧭 | opt-in `LLMEnhancer`（接口已预留在 `reconcheck/llm`）：对齐消歧 + 差异解释；仅 OpenAI 兼容端点、超时/预算/失败回退到确定性结果、`llm_augmented` 标记 |
-| 扫描件 OCR | 🕔 | PDF 文本层已实现；无文本层的扫描件走预留的 OCR 后端（下一里程碑：版面还原、无边框表格、多栏） |
+| LLM 参与 | 🧭 | opt-in `LLMEnhancer`（接口已预留在 `reconcheck/llm`）：对齐消歧 + 差异解释；仅 OpenAI 兼容端点、超时/预算/失败回退到确定性结果（报告契约暂不含 LLM 标记字段，接入时以增量字段扩展） |
+| 扫描件 OCR | ✅ | 无文本层 PDF 可选走 Tesseract（`pip install "reconcheck[pdf-ocr]"` + `RECONCHECK_OCR=1`）：按行输出文本；未安装/未开启时仍是明确报错。版面还原、多栏表格属后续规划 |
 | 实体解析 | 🕔 | `华加` ↔ `深圳市华加生物科技有限公司` 的真对齐（当前为后缀/空白归一，三单键支持 part_no/entity 归一） |
 | 规则 v1 稳定 | 🕔 | 例外目录扩充（日期/文本已入库）、evidence 输出格式冻结 |
 | 分布式队列 | 🕔 | 当前单进程 worker + 文件持久化，无消息队列 |

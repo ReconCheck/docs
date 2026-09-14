@@ -4,8 +4,9 @@ Three audiences: **reconciliation / finance operators** (web UI), **enterprise
 integrations** (REST API), **developers** (CLI / embedding).
 
 > Scope first: tabular files (CSV / TSV / XLSX) and **PDF text layers** are
-> supported; **scanned PDFs and images need OCR**, which is not wired yet.
-> Files auto-pair only when their names share a business number (see FAQ).
+> supported; **scanned PDFs and images** can optionally be OCR'd (install the
+> `pdf-ocr` extra and set `RECONCHECK_OCR=1`; otherwise they fail with a clear
+> error). Files auto-pair only when their names share a business number (see FAQ).
 
 ---
 
@@ -135,7 +136,9 @@ binary junk → a clear "not readable text" error (no garbage table).
 
 **Q: PDF support?** Text-layer PDFs yes (ruling-line tables first, layout
 fallback for borderless print-outs). Scanned (image-only) PDFs report "OCR
-required" — not wired yet.
+required" by default; enable the optional Tesseract backend with
+`pip install "reconcheck[pdf-ocr]"` + `RECONCHECK_OCR=1` (set
+`RECONCHECK_TESSERACT_CMD` when the binary is not on PATH).
 
 **Q: Size limits?** Upload ≤ 64 MB per file; data-source fetch ≤ 50 MB
 (streaming cap). Oversized input errors out clearly.

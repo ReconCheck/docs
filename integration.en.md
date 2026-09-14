@@ -90,6 +90,9 @@ fetch substitutes `{id}`. Without `{id}`, fetch pulls `url` as-is.
 
 - `PUT /api/datasources/{id}` with an empty `token` keeps the stored secret;
   `GET` only ever echoes `has_token`.
+- Tokens stay plaintext on disk by default; set `RECONCHECK_DATA_KEY` (install
+  the `crypto` extra) to store them Fernet-encrypted in `datasources/*.json` —
+  loading decrypts transparently.
 - `/probe` really hits the endpoint: connection/timeout failure → `ok=false`;
   **non-2xx also counts as failed** (a 401 means the token is wrong, not "it
   works").

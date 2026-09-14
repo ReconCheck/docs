@@ -26,6 +26,8 @@ python -m venv .venv
 | 监听地址 | 业务内网即使有鉴权也建议不暴露公网；需要对外时走反向代理（§5） |
 | `RECONCHECK_TTL_DAYS` | 默认 30；按审计留存要求调整（上传文件与报告由后台每小时清理，在途任务不删） |
 | `RECONCHECK_ALLOW_PRIVATE_FETCH` | 默认**不设** → 数据源拉取禁止回环/私网/链路本地/云元数据（169.254.x.x）地址，重定向后复检；仅当数据源确实在**可信内网**时设 `=1` 显式豁免（方案白名单 http/https 始终生效） |
+| `RECONCHECK_DATA_KEY` | 选配：数据源令牌的落盘加密密钥（`pip install "reconcheck[crypto]"`，Fernet key：`python -c "from cryptography.fernet import Fernet;print(Fernet.generate_key().decode())"`）。设置后新保存的令牌以密文写入 `datasources/*.json`；**未设置 = 明文存储**。密钥丢失则旧密文令牌视为缺失 |
+| `RECONCHECK_OCR` | 选配：`=1` 时对无文本层的 PDF 启用 Tesseract OCR（`pip install "reconcheck[pdf-ocr]"`）；默认关闭——扫描件仍明确报错。二进制不在 PATH 时用 `RECONCHECK_TESSERACT_CMD` 指定完整路径 |
 
 ## 3. 数据目录结构（备份/恢复）
 
@@ -35,10 +37,10 @@ python -m venv .venv
 ├── files/<job_id>/    # 批次上传的原始文件（TTL 清理）
 ├── reports/*.json     # 比对报告归档（TTL 清理）
 ├── documents/<id>/    # 文档库（上传/数据源拉取副本 + meta.json）
-└── datasources/*.json # 数据源配置（含明文令牌——备份即凭证，注意保管）
+└── datasources/*.json # 数据源配置（令牌明文或 Fernet 密文，视 RECONCHECK_DATA_KEY——备份即凭证，注意保管）
 ```
 
-备份 = 冷拷贝整个目录；恢复 = 解压回原路径后启动。**令牌是明文存储的**（操作员配置的凭证库，不是保险库），备份文件按密级对待。
+备份 = 冷拷贝整个目录；恢复 = 解压回原路径后启动。默认**令牌明文存储**（操作员配置的凭证库，不是保险库）；配置 `RECONCHECK_DATA_KEY` 后改为加密存储（密钥需另行保管）。无论哪种，备份文件都按密级对待。
 
 ## 4. 服务化
 
@@ -111,7 +113,8 @@ server {
 
 - [ ] `RECONCHECK_API_KEY` 已设置且为强随机值
 - [ ] 监听未直接暴露公网（本机 + 反代，或业务内网）
-- [ ] 数据目录位置已定、备份策略已配、备份按密级保管（含明文令牌）
+- [ ] 数据目录位置已定、备份策略已配、备份按密级保管（令牌默认明文落盘，可设 `RECONCHECK_DATA_KEY` 加密）
+- [ ] 若业务需要扫描件：已安装 `pdf-ocr` 扩展并设 `RECONCHECK_OCR=1`（否则保持默认，明确报错）
 - [ ] 数据源端点在内网时已设 `RECONCHECK_ALLOW_PRIVATE_FETCH=1`，且端点本身可信（该变量关闭私网地址拦截）
 - [ ] `client_max_body_size` ≥ 70m（或与上传上限匹配）
 - [ ] LLM 功能未启用时 `reconcheck/llm` 保持 NullEnhancer（默认，不产生任何外部调用）

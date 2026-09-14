@@ -28,6 +28,8 @@ python -m venv .venv
 | Listen address | keep it off the public internet; use a reverse proxy (see §5) if exposure is needed |
 | `RECONCHECK_TTL_DAYS` | default 30; adjust to your retention policy (uploaded files + reports are pruned hourly; active jobs never touched) |
 | `RECONCHECK_ALLOW_PRIVATE_FETCH` | unset by default → data-source fetch rejects loopback / private / link-local / cloud-metadata (169.254.x.x) addresses and re-checks after redirects; set `=1` only when the source genuinely lives on a **trusted intranet** (the http/https scheme whitelist always applies) |
+| `RECONCHECK_DATA_KEY` | optional: Fernet key that encrypts data-source tokens at rest (`pip install "reconcheck[crypto]"`; generate with `python -c "from cryptography.fernet import Fernet;print(Fernet.generate_key().decode())"`). Without it tokens stay **plaintext on disk**. Lose the key and previously encrypted tokens read as absent |
+| `RECONCHECK_OCR` | optional: `=1` enables Tesseract OCR for PDFs without a text layer (`pip install "reconcheck[pdf-ocr]"`); off by default — scans still fail with a clear error. Point `RECONCHECK_TESSERACT_CMD` at the binary when it is not on PATH |
 
 ## 3. Data directory layout (backup / restore)
 
@@ -37,12 +39,13 @@ python -m venv .venv
 ├── files/<job_id>/    # batch uploads (TTL-pruned)
 ├── reports/*.json     # report archive (TTL-pruned)
 ├── documents/<id>/    # document library (uploads + fetched copies + meta.json)
-└── datasources/*.json # data source configs — include plaintext tokens: treat backups as secrets
+└── datasources/*.json # data source configs — tokens plaintext or Fernet-encrypted (RECONCHECK_DATA_KEY): treat backups as secrets
 ```
 
 Backup = cold-copy the directory; restore = unpack at the same path and start.
-**Tokens are stored in plaintext** (an operator-configured credential store,
-not a vault) — protect the directory accordingly.
+By default **tokens are stored in plaintext** (an operator-configured credential
+store, not a vault); set `RECONCHECK_DATA_KEY` to store them encrypted instead
+(the key itself must be escrowed separately). Protect the directory either way.
 
 ## 4. Run as a service
 
@@ -118,7 +121,8 @@ before the engine ever sees the file.
 
 - [ ] `RECONCHECK_API_KEY` set to a strong random value
 - [ ] Not listening on the public internet (localhost + proxy, or a trusted VLAN)
-- [ ] Data directory location and backup plan defined; backups treated as secrets (plaintext tokens)
+- [ ] Data directory location and backup plan defined; backups treated as secrets (tokens plaintext by default; `RECONCHECK_DATA_KEY` enables encryption at rest)
+- [ ] Scanned input expected? `pdf-ocr` extra installed and `RECONCHECK_OCR=1` set — otherwise the default stays a clear refusal
 - [ ] Intranet data-source endpoints: `RECONCHECK_ALLOW_PRIVATE_FETCH=1` set deliberately and the endpoints themselves trusted (the env var turns off the private-address guard)
 - [ ] Proxy `client_max_body_size` ≥ 70m (or matched to the cap)
 - [ ] LLM participation disabled by default (`NullEnhancer`) — no external calls unless opted in

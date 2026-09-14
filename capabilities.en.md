@@ -10,7 +10,7 @@
 |---|---|---|
 | Tabular parsing CSV / TSV / TXT | ✅ | delimiter sniffing (`,` `;` `\t` `\|`); ragged rows get generated headers |
 | Tabular parsing XLSX / XLSM | ✅ | read-only streaming load (flat memory), multi-sheet, `data_only` values, optional sheet filter |
-| PDF parsing (text layer) | ✅ | ruling-line tables first, layout fallback for borderless print-outs (word clustering by coordinates); **scan-only files raise a clear "OCR not wired" error** instead of parsing garbage |
+| PDF parsing (text layer) | ✅ | ruling-line tables first, layout fallback for borderless print-outs (word clustering by coordinates); **scan-only files raise a clear "OCR required" error** instead of parsing garbage — optional Tesseract backend via the `pdf-ocr` extra + `RECONCHECK_OCR=1` |
 | Encoding detection | ✅ | UTF-8 (with/without BOM) / GB18030 / UTF-16 / Latin-1; **plausibility gate**: binary junk raises a clear `TextDecodeError` instead of parsing as a garbage table |
 | Row alignment | ✅ | exact key match on `match_on` with key normalisation (part numbers `A-012` → `a12`, entity suffix stripping, whitespace); cell-level units preserved |
 | Built-in auto rule | ✅ | compares every shared numeric column, tolerance relative 0.001 / absolute 0.01; **never double-reports a column an explicit rule already covers** (column-level dedupe) |
@@ -18,6 +18,7 @@
 | Exceptions | ✅ | unit conversion `kg↔g`, rounding, **date tolerance `dates_within: {days}`** (a real date gap is still reported), **case-insensitive text equality** (a real text difference is still reported) |
 | **Three-way compare3** | ✅ | chain-agnostic — purchase chain (PO + delivery note + invoice) and **sales chain (sales order + outbound + sales invoice)** alike: every pairwise report, plus a consensus/outlier pass per key and field (numeric values compared with the active tolerance and unit-alignable, keys normalisable) |
 | Evidence chain | ✅ | every finding carries both-side coordinates + a `cell://` href (PDF findings cite the page); the report JSON is the contract |
+| Report warnings | ✅ | `warnings[]` states non-fatal issues explicitly (e.g. **duplicate keys are first-wins**: only the first row per key is compared); `documents[].kind` labels the document role (po/so/outbound/invoice/delivery) |
 | CLI | ✅ | `reconcheck compare` / `compare3 ...`; missing files and bad input fail cleanly (no traceback) |
 
 ```bash
@@ -53,7 +54,7 @@ reconcheck compare examples/po.csv examples/invoice.csv \
 
 - **type=file** — endpoint returns the document byte stream; URL may contain a `{id}` placeholder; optional `list_url` serves the picker entries.
 - **type=records** — endpoint returns JSON; `records_path` selects the array (e.g. `data.items`); records become a table (union of keys as headers, one row per record).
-- Auth: `none` / `bearer` / custom `header` (`header_name`); tokens stored in the local data dir, the API only echoes `has_token`.
+- Auth: `none` / `bearer` / custom `header` (`header_name`); the API only echoes `has_token`. Tokens are plaintext on disk by default; set `RECONCHECK_DATA_KEY` (the `crypto` extra) to store them Fernet-encrypted.
 - Fetching is a **server-side request** (no CORS) with a **50 MB streaming cap** — oversized replies abort mid-download.
 
 ## 3. Frontend (dependency-free static page served at `/`)
@@ -89,8 +90,8 @@ ReconCheck is **read-only**: it never writes to business systems and never modif
 | Item | Status | Content |
 |---|---|---|
 | Cross-engine "job layer" | 🧭 | see [job-layer.md](./job-layer.md): Document / Pair / Report as engine-agnostic abstractions; future engine adapters; LLM stays an engine-layer pipe |
-| LLM participation | 🧭 | opt-in `LLMEnhancer` (interface reserved in `reconcheck/llm`): alignment disambiguation + finding explanations; OpenAI-compatible endpoints only, timeouts/budget/rollback to the deterministic result, `llm_augmented` flags |
-| OCR for scanned documents | 🕔 | PDF text layer shipped; scans (no text layer) use the reserved OCR backend (next milestone: layout reconstruction, borderless tables, multi-column) |
+| LLM participation | 🧭 | opt-in `LLMEnhancer` (interface reserved in `reconcheck/llm`): alignment disambiguation + finding explanations; OpenAI-compatible endpoints only, timeouts/budget/rollback to the deterministic result (the report contract carries no LLM marker yet — it will grow as an additive field when a backend lands) |
+| OCR for scanned documents | ✅ | textless PDFs can be OCR'd with Tesseract (`pip install "reconcheck[pdf-ocr]"` + `RECONCHECK_OCR=1`): per-line text output; still a clear error when not installed/enabled. Layout reconstruction & multi-column tables remain planned |
 | Entity resolution | 🕔 | real linking (`华加` ↔ `深圳市华加生物科技有限公司`; today: suffix/whitespace normalisation, and `part_no`/`entity` key normalisation for align & compare3) |
 | Rule format v1 | 🕔 | richer exception catalogue (date/text shipped), frozen evidence output |
 | Distributed queue | 🕔 | today: single-process worker + file persistence, no message queue |
